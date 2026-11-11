@@ -65,6 +65,18 @@ The screen shows the state, the actual temperature, the setpoint, the power leve
 
 Open it with `?demo` to try it against a simulated kiln with no hardware. See [web/README.md](web/README.md) for details, tuning, and the serial protocol.
 
+Live status during a firing: the program's progress, temperature, setpoint and power, with the history chart.
+
+![Live status and history chart](docs/web-status.png)
+
+The firing program editor, mid-firing. The dotted line is where the running program is now; it can be dragged to continue from a different time.
+
+![Firing program editor](docs/web-program.png)
+
+PID tuning: the baseline gains, a four-point tuning table measured by step tests on the QuickFire, and the last step test's result.
+
+![PID tuning card](docs/web-tuning.png)
+
 Programs run on the controller, not the PC: closing the page or unplugging USB changes nothing. Progress is checkpointed every minute, and after a power cut the program resumes if the kiln is still within 50 °C of where it was.
 
 ## Build and flash
