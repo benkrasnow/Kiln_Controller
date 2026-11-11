@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 620" width="920" height="620" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+  <rect width="920" height="620" fill="#ffffff"/>
+  <style>
+    .box { fill: #f4f5f7; stroke: #444; stroke-width: 1.5; }
+    .title { font-weight: 700; font-size: 14px; fill: #222; }
+    .sub { fill: #666; font-size: 12px; }
+    .pin { fill: #222; }
+    .nc { fill: #999; }
+    .w { fill: none; stroke-width: 3; stroke-linejoin: round; }
+    .blk { stroke: #222; }
+    .red { stroke: #d62020; }
+    .wht { stroke: #b8b8b8; }
+    .yel { stroke: #e0b000; }
+    .grn { stroke: #2e9e3e; }
+    .mains { fill: none; stroke-width: 4; stroke-linejoin: round; }
+    .note { fill: #444; font-size: 12px; }
+    .dot { fill: #444; }
+  </style>
+
+  <!-- M5Stack Dial -->
+  <rect class="box" x="30" y="50" width="240" height="440" rx="14"/>
+  <text class="title" x="45" y="76">M5Stack Dial v1.1 (rear)</text>
+
+  <text class="title" x="45" y="96" font-size="13">Port A (Grove)</text>
+  <text class="pin" x="60" y="114">GND</text><text class="sub" x="160" y="114">black</text>
+  <text class="pin" x="60" y="134">5 V</text><text class="sub" x="160" y="134">red</text>
+  <text class="pin" x="60" y="154">G13</text><text class="sub" x="160" y="154">white</text>
+  <text class="pin" x="60" y="174">G15</text><text class="sub" x="160" y="174">yellow</text>
+
+  <text class="title" x="45" y="244" font-size="13">Port B (Grove)</text>
+  <text class="pin" x="60" y="264">GND</text><text class="sub" x="160" y="264">black</text>
+  <text class="nc" x="60" y="284">5 V (unused)</text><text class="sub" x="160" y="284">red</text>
+  <text class="pin" x="60" y="304">G2</text><text class="sub" x="160" y="304">white</text>
+  <text class="pin" x="60" y="324">G1</text><text class="sub" x="160" y="324">yellow</text>
+
+  <text class="title" x="45" y="406" font-size="13">DC in (6–36 V)</text>
+  <text class="pin" x="60" y="424">+</text>
+  <text class="pin" x="60" y="444">−</text>
+
+  <!-- MAX31855 -->
+  <rect class="box" x="440" y="50" width="200" height="160" rx="8"/>
+  <text class="title" x="452" y="72">MAX31855 breakout</text>
+  <text class="sub" x="452" y="88">Adafruit 269</text>
+  <text class="pin" x="452" y="104">Vin</text>
+  <text class="nc" x="452" y="122">3Vo (n/c)</text>
+  <text class="pin" x="452" y="140">GND</text>
+  <text class="pin" x="452" y="158">DO</text>
+  <text class="pin" x="452" y="176">CS</text>
+  <text class="pin" x="452" y="194">CLK</text>
+  <text class="pin" x="604" y="122" text-anchor="end">T+</text>
+  <text class="pin" x="604" y="152" text-anchor="end">T−</text>
+
+  <!-- SSR -->
+  <rect class="box" x="440" y="300" width="200" height="120" rx="8"/>
+  <text class="title" x="452" y="322">SSR, 25 A zero-cross</text>
+  <text class="sub" x="452" y="338">input 3–32 V DC, output AC</text>
+  <text class="pin" x="452" y="364">+ (3)</text>
+  <text class="pin" x="452" y="394">− (4)</text>
+  <text class="pin" x="628" y="364" text-anchor="end">AC (1)</text>
+  <text class="pin" x="628" y="394" text-anchor="end">AC (2)</text>
+  <text class="sub" x="452" y="412">on a heatsink</text>
+
+  <!-- 12 V supply -->
+  <rect class="box" x="30" y="530" width="240" height="60" rx="8"/>
+  <text class="title" x="45" y="554">12 V DC supply</text>
+  <text class="sub" x="45" y="572">any 6–36 V, ≥ 0.5 A</text>
+
+  <!-- Kiln -->
+  <rect class="box" x="720" y="50" width="170" height="170" rx="8"/>
+  <text class="title" x="732" y="72">Kiln</text>
+  <text class="sub" x="732" y="90">Paragon QuickFire 6</text>
+  <text class="sub" x="732" y="106">120 V, 15 A, 1800 W</text>
+  <text class="pin" x="732" y="128">thermocouple,</text>
+  <text class="pin" x="732" y="144">type K, in an</text>
+  <text class="pin" x="732" y="160">alumina tube</text>
+  <text class="sub" x="732" y="200">power cord ↓</text>
+
+  <!-- Receptacle -->
+  <rect class="box" x="720" y="300" width="170" height="120" rx="8"/>
+  <text class="title" x="732" y="322">Switched receptacle</text>
+  <text class="sub" x="732" y="338">20 A, kiln plugs in here</text>
+  <text class="pin" x="732" y="364">hot</text>
+  <text class="pin" x="732" y="384">neutral</text>
+  <text class="pin" x="732" y="404">ground</text>
+
+  <!-- Mains in -->
+  <rect class="box" x="440" y="510" width="200" height="80" rx="8"/>
+  <text class="pin" x="460" y="528">hot</text>
+  <text class="pin" x="520" y="528">neutral</text>
+  <text class="pin" x="590" y="528">gnd</text>
+  <text class="title" x="452" y="552">Mains in</text>
+  <text class="sub" x="452" y="568">120 V, 20 A circuit. The SSR</text>
+  <text class="sub" x="452" y="582">switches the hot leg only.</text>
+
+  <!-- Port A to MAX31855 -->
+  <polyline class="w blk" points="270,110 310,110 310,136 440,136"/>
+  <polyline class="w red" points="270,130 330,130 330,100 440,100"/>
+  <polyline class="w wht" points="270,150 350,150 350,172 440,172"/>
+  <polyline class="w yel" points="270,170 370,170 370,190 440,190"/>
+  <!-- Port B G2 to DO -->
+  <polyline class="w wht" points="270,300 400,300 400,154 440,154"/>
+  <!-- Port B to SSR -->
+  <polyline class="w yel" points="270,320 320,320 320,360 440,360"/>
+  <polyline class="w blk" points="270,260 300,260 300,390 440,390"/>
+  <!-- 10k pull-down G1 to GND, at the SSR input -->
+  <line x1="420" y1="360" x2="420" y2="367" stroke="#444" stroke-width="2"/>
+  <rect x="414" y="367" width="12" height="16" fill="#fff" stroke="#444" stroke-width="2"/>
+  <line x1="420" y1="383" x2="420" y2="390" stroke="#444" stroke-width="2"/>
+  <circle class="dot" cx="420" cy="360" r="3"/><circle class="dot" cx="420" cy="390" r="3"/>
+  <text class="note" x="372" y="440">10 kΩ pull-down</text>
+  <text class="note" x="372" y="455">(keeps the SSR off at reset)</text>
+
+  <!-- 12 V to Dial -->
+  <polyline class="w red" points="270,420 310,420 310,515 200,515 200,530"/>
+  <polyline class="w blk" points="270,440 290,440 290,505 230,505 230,530"/>
+
+  <!-- Thermocouple -->
+  <polyline class="w yel" points="640,118 690,118 690,128 720,128"/>
+  <polyline class="w red" points="640,148 700,148 700,150 720,150"/>
+  <text class="note" x="646" y="108">yellow +</text>
+  <text class="note" x="646" y="168">red −</text>
+
+  <!-- Mains -->
+  <polyline class="mains blk" points="470,510 470,472 662,472 662,390 640,390"/>
+  <polyline class="mains blk" points="640,360 720,360"/>
+  <polyline class="mains wht" points="540,510 540,486 700,486 700,380 720,380"/>
+  <polyline class="mains grn" points="605,510 605,498 712,498 712,400 720,400"/>
+  <polyline points="805,220 805,300" fill="none" stroke="#888" stroke-width="7"/>
+
+  <text class="sub" x="30" y="30" font-size="12">Kiln controller wiring. Go by pin, not colour: these Grove cables' colours are the reverse of M5Stack's table.</text>
+</svg>

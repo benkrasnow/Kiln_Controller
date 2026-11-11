@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kiln Controller</title>
+  <meta name="description" content="Monitor and control the kiln controller over USB. Runs in Chrome or Edge with nothing to install.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f97316' d='M12 2c1 3.5-1.5 5-1.5 7.5A2.5 2.5 0 0 0 13 12c1.7 0 2.6-1.4 2.3-3.4C17.5 10.3 19 12.7 19 15a7 7 0 0 1-14 0c0-4.5 4-6.5 7-13z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+  <!-- Browsers won't load modules from file://; use the bundled single-file build instead. -->
+  <script data-file-redirect>if (location.protocol === "file:") location.replace("kiln-controller.html" + location.search);</script>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.5-1.5 5-1.5 7.5A2.5 2.5 0 0 0 13 12c1.7 0 2.6-1.4 2.3-3.4C17.5 10.3 19 12.7 19 15a7 7 0 0 1-14 0c0-4.5 4-6.5 7-13z"/></svg>
+      <h1>Kiln Controller</h1>
+    </div>
+    <div class="conn">
+      <span id="link-pill" class="pill" data-state="off">Not connected</span>
+      <button id="connect" class="btn primary">Connect</button>
+    </div>
+  </header>
+
+  <div id="unsupported" class="banner warn" hidden>
+    This browser can't talk to USB serial devices. Open this page in <b>Chrome</b>, <b>Edge</b> or another
+    Chromium-based browser on a computer. <a href="?demo">Try the demo</a> instead.
+  </div>
+  <div id="offline-note" class="banner" hidden>
+    The controller keeps running on its own. Reconnect any time to see where it is.
+  </div>
+  <div id="fault-banner" class="banner danger" hidden></div>
+  <div id="stop-banner" class="banner" hidden>
+    <span id="stop-text"></span>
+    <button id="stop-dismiss" class="icon-btn" aria-label="Dismiss" title="Dismiss">×</button>
+  </div>
+  <div id="warn-banner" class="banner warn" hidden></div>
+
+  <main>
+    <section class="card now" aria-labelledby="now-title">
+      <h2 id="now-title" class="visually-hidden">Current state</h2>
+      <div class="state-row">
+        <span id="state-chip" class="chip" data-state="unknown">—</span>
+        <span id="sim-chip" class="chip sim" hidden>Simulated</span>
+        <span id="stale" class="stale" hidden>No data from the controller</span>
+      </div>
+      <div class="actual">
+        <span class="label">Actual</span>
+        <span class="big"><span id="pv">—</span><span class="unit">°C</span></span>
+      </div>
+      <div id="prog-status" class="prog-status" hidden>
+        <div class="prog-status-head">
+          <span id="ps-name"></span>
+          <span id="ps-wait" class="chip waiting" hidden>Waiting for kiln</span>
+        </div>
+        <div class="progress"><div id="ps-bar"></div></div>
+        <div class="prog-status-foot">
+          <span id="ps-seg"></span><span id="ps-time"></span>
+        </div>
+      </div>
+      <dl class="stats">
+        <div><dt>Setpoint</dt><dd><span id="sp">—</span> °C</dd></div>
+        <div><dt>Power</dt><dd><span id="duty">—</span> %</dd></div>
+        <div><dt>Heater</dt><dd><span id="ssr" class="lamp" aria-label="off"></span><span id="ssr-text">—</span></dd></div>
+      </dl>
+    </section>
+
+    <section class="card control" aria-labelledby="control-title">
+      <h2 id="control-title">Setpoint</h2>
+      <form id="sp-form" class="sp-form">
+        <label for="sp-input" class="visually-hidden">Setpoint in °C</label>
+        <div class="input-unit">
+          <input id="sp-input" type="number" inputmode="numeric" min="0" max="1400" step="1" required disabled>
+          <span>°C</span>
+        </div>
+        <button id="sp-apply" class="btn" type="submit" disabled>Set</button>
+      </form>
+      <div class="run-buttons">
+        <button id="start" class="btn heat" disabled>Start heating</button>
+        <button id="stop" class="btn" disabled>Stop</button>
+      </div>
+      <p class="hint">Changes made here also show on the Dial. The Dial's own knob and button keep working.</p>
+    </section>
+
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <div class="chart-head">
+        <h2 id="chart-title">History</h2>
+        <div class="legend">
+          <span><i class="sw pv"></i>Actual</span>
+          <span><i class="sw sp"></i>Setpoint</span>
+          <span><i class="sw power"></i>Power</span>
+        </div>
+        <div class="seg" role="group" aria-label="Time range">
+          <button data-range="900000">15 min</button>
+          <button data-range="3600000" aria-pressed="true">1 h</button>
+          <button data-range="21600000">6 h</button>
+          <button data-range="Infinity">All</button>
+        </div>
+        <button id="export" class="btn small" disabled>Export CSV</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart"></canvas>
+        <div id="tooltip" class="tooltip" hidden></div>
+      </div>
+      <p class="hint">History is recorded while this page is connected.</p>
+    </section>
+
+    <section class="card program-card" aria-labelledby="program-title">
+      <div class="chart-head">
+        <h2 id="program-title">Firing program</h2>
+        <input id="prog-name" class="prog-name" placeholder="Untitled program" aria-label="Program name" spellcheck="false">
+        <div class="head-actions">
+          <button id="prog-import" class="btn small">Import</button>
+          <button id="prog-export" class="btn small">Export</button>
+          <button id="prog-clear" class="btn small">New</button>
+          <input id="prog-file" type="file" accept=".json,application/json" hidden>
+        </div>
+      </div>
+      <div class="prog-body">
+        <div class="prog-points">
+          <table class="points">
+            <thead>
+              <tr><th>#</th><th>Time from start</th><th>Temperature</th><th>Segment</th><th></th></tr>
+            </thead>
+            <tbody id="prog-rows"></tbody>
+          </table>
+          <button id="prog-add" class="btn small add">+ Add point</button>
+          <p id="prog-summary" class="hint"></p>
+          <label class="check">
+            <input type="checkbox" id="prog-wait" checked>
+            <span>
+              <b>Wait for the kiln if it falls behind</b>
+              <span class="hint">On: the program clock pauses while the kiln is more than 15 °C behind the profile, so
+                every ramp and hold gets its full time. Off: the setpoint follows the clock alone, even if the kiln
+                can't keep up.</span>
+            </span>
+          </label>
+        </div>
+        <div class="prog-chart-wrap">
+          <canvas id="prog-chart" aria-label="Program graph. Drag points to move them, click to add, double-click to delete."></canvas>
+          <p class="hint chart-hint">Drag a point to move it · click to add a point · double-click to delete · hold Shift for 1-minute / 1 °C steps</p>
+        </div>
+      </div>
+      <p id="prog-live-note" class="banner live-note" hidden></p>
+      <div class="prog-device">
+        <p id="prog-device"></p>
+        <div class="head-actions">
+          <button id="prog-load" class="btn small" disabled>Load from controller</button>
+          <button id="prog-run" class="btn heat" disabled>Send to controller and start now</button>
+        </div>
+      </div>
+      <p class="hint">
+        Enter times as minutes (<code>90</code>), hours and minutes (<code>1:30</code>, <code>1h 30m</code>) or hours
+        (<code>2.5h</code>). The editor saves to this browser. Once sent, the controller keeps the program and runs it
+        on its own, and the Dial's long press stops it.
+      </p>
+    </section>
+
+    <section class="card tuning-card" aria-labelledby="tuning-title">
+      <div class="chart-head">
+        <h2 id="tuning-title">PID tuning</h2>
+        <div class="head-actions">
+          <button id="tun-load" class="btn small" disabled>Load from controller</button>
+          <button id="tun-send" class="btn small heat" disabled>Send to controller</button>
+        </div>
+      </div>
+      <p class="hint tun-intro">
+        Kilns behave differently hot and cold: radiation makes losses much larger at high temperature. The
+        controller keeps a few tuning points; between them it interpolates the gains by setpoint, and it adds each
+        point's <b>holding power</b> (the power needed to stay at that temperature) as a baseline, so the PID only
+        corrects around it. Measure points with step tests, typically one low (≈150 °C) and one high (≈750 °C).
+      </p>
+      <div class="tun-body">
+        <div>
+          <h3>Baseline gains</h3>
+          <div class="tun-base">
+            <label>P <input id="tun-base-kp" class="num" data-key="kp" type="number" step="0.01" min="0"></label>
+            <label>I <input id="tun-base-ki" class="num" data-key="ki" type="number" step="0.001" min="0"></label>
+            <label>D <input id="tun-base-kd" class="num" data-key="kd" type="number" step="0.01" min="0"></label>
+            <button id="tun-base-reset" class="btn small">Built-in defaults</button>
+          </div>
+          <p id="tun-base-note" class="hint"></p>
+          <h3>Tuning points</h3>
+          <table class="points tun-table">
+            <thead>
+              <tr>
+                <th>Temp °C</th><th title="% power per °C of error">P</th>
+                <th title="% power per °C·min of accumulated error">I</th>
+                <th title="% power per °C/min of temperature change">D</th>
+                <th title="power needed to hold this temperature">Hold %</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tun-rows"></tbody>
+          </table>
+          <button id="tun-add" class="btn small add">+ Add point</button>
+          <p id="tun-summary" class="hint"></p>
+          <p class="hint">P: % power per °C of error · I: % per °C·min · D: % per °C/min of change. P matters most;
+            D damps overshoot at low temperature and can be 0 when hot.</p>
+          <div class="tun-chart-wrap">
+            <canvas id="tun-chart" aria-label="P, D and holding power across temperature"></canvas>
+            <div class="legend tun-legend">
+              <span><i class="sw pv"></i>P</span><span><i class="sw sp-solid"></i>D</span>
+              <span><i class="sw hold"></i>Holding power (right axis)</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3>Step test</h3>
+          <div class="tun-form">
+            <label>Test temperature
+              <span class="input-unit small"><input id="tun-temp" type="number" min="50" max="1300" step="10" value="150"><span>°C</span></span>
+            </label>
+            <span class="quick">
+              <button class="btn small" data-tun-temp="150">150 °C</button>
+              <button class="btn small" data-tun-temp="750">750 °C</button>
+            </span>
+            <label>Power step
+              <span class="input-unit small"><input id="tun-step" type="number" min="5" max="50" step="5" value="20"><span>%</span></span>
+            </label>
+          </div>
+          <button id="tun-start" class="btn heat tun-start" disabled>Run step test</button>
+          <p id="tun-hint-busy" class="hint" hidden>A firing program is running; stop it to run a step test.</p>
+          <p id="tun-plan" class="hint"></p>
+          <div id="tun-live" class="tun-live" hidden>
+            <ol class="tun-steps">
+              <li data-phase="heating">Heat up</li><li data-phase="settling">Hold steady</li>
+              <li data-phase="stepping">Power step</li><li data-phase="done">Result</li>
+            </ol>
+            <b id="tun-phase"></b>
+            <div class="tun-bar" role="progressbar" aria-labelledby="tun-phase"><i id="tun-bar"></i></div>
+            <span id="tun-detail"></span>
+            <span id="tun-times"></span>
+            <span id="tun-next" class="hint"></span>
+            <span class="hint">The main Stop button (or a long press on the Dial) cancels the test.</span>
+          </div>
+          <div id="tun-result" class="tun-result" hidden>
+            <h3>Last result at <span id="tun-r-temp"></span> °C</h3>
+            <p class="hint">Heating is off. Use the suggested gains as a tuning point (with this temperature's holding
+              power) or as the baseline gains, then press <b>Send to controller</b>.</p>
+            <dl>
+              <div><dt>Holding power</dt><dd id="tun-r-hold"></dd></div>
+              <div><dt>Heating rate per 100 % power</dt><dd id="tun-r-rate"></dd></div>
+              <div><dt>Dead time</dt><dd id="tun-r-dead"></dd></div>
+              <div><dt>Suggested gains</dt><dd id="tun-r-gains"></dd></div>
+            </dl>
+            <span class="tun-result-actions">
+              <button id="tun-use" class="btn small">Add to tuning points</button>
+              <button id="tun-use-base" class="btn small">Use as baseline gains</button>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="prog-device">
+        <p id="tun-device"></p>
+      </div>
+    </section>
+
+    <details class="card console">
+      <summary>Serial console</summary>
+      <pre id="log" aria-live="off"></pre>
+      <form id="raw-form" class="raw-form">
+        <input id="raw-input" placeholder='{"cmd":"hello"}' autocomplete="off" spellcheck="false" disabled>
+        <button class="btn small" disabled>Send</button>
+      </form>
+    </details>
+  </main>
+
+  <footer>
+    <span id="fw-info"></span>
+    <span id="toast" class="toast" role="status" hidden></span>
+  </footer>
+</body>
+</html>
